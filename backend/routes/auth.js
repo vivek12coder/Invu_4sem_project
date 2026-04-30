@@ -22,7 +22,11 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      console.error('Register validation errors:', errors.array());
+      return res.status(400).json({ 
+        message: 'Validation failed',
+        errors: errors.array() 
+      });
     }
 
     const { name, email, password } = req.body;
@@ -49,8 +53,8 @@ router.post(
         user: { id: user._id, name: user.name, email: user.email },
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Register error:', err);
+      res.status(500).json({ message: err.message || 'Server error' });
     }
   }
 );
@@ -65,7 +69,11 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      console.error('Login validation errors:', errors.array());
+      return res.status(400).json({ 
+        message: 'Validation failed',
+        errors: errors.array() 
+      });
     }
 
     const { email, password } = req.body;
@@ -87,10 +95,25 @@ router.post(
         user: { id: user._id, name: user.name, email: user.email },
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Login error:', err);
+      res.status(500).json({ message: err.message || 'Server error' });
     }
   }
 );
+
+// GET /api/auth/profile - get user profile
+const auth = require('../middleware/auth');
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error('Profile error:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
+  }
+});
 
 module.exports = router;

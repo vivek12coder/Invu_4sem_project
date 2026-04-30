@@ -35,7 +35,17 @@ export default function Login() {
       login(res.data.token, res.data.user);
       navigate('/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed. Please try again.';
+      console.error('Login error:', err);
+      let msg = 'Login failed. Please try again.';
+      
+      if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
+      
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        msg = err.response.data.errors.map(e => e.msg).join(', ');
+      }
+      
       setServerError(msg);
     } finally {
       setLoading(false);
